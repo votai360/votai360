@@ -150,7 +150,7 @@ export function Voters() {
       neighborhood: formData.neighborhood,
       cep: formData.cep,
       birth_date: formData.birth_date || null,
-      supportLevel: formData.supportLevel,
+      support_level: formData.supportLevel,
       latitude: coords ? coords.lat : null,
       longitude: coords ? coords.lon : null,
       tags: finalTags,

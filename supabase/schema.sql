@@ -12,6 +12,7 @@ CREATE TABLE profiles (
 -- 2. Voters (Eleitores)
 CREATE TABLE voters (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   phone TEXT,
   neighborhood TEXT,
@@ -26,73 +27,65 @@ CREATE TABLE voters (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. Interactions (Interações com Eleitores)
-CREATE TABLE interactions (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  voter_id UUID REFERENCES voters(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
-  type TEXT CHECK (type IN ('visit', 'message', 'call', 'meeting')) NOT NULL,
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- 4. Team Areas (Áreas de Atuação da Equipe)
-CREATE TABLE team_areas (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  neighborhood TEXT NOT NULL,
-  assigned_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
 -- 5. Events (Agenda Política)
 CREATE TABLE events (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
   event_date TIMESTAMP WITH TIME ZONE NOT NULL,
   location TEXT,
   type TEXT CHECK (type IN ('caminhada', 'reuniao', 'comicio', 'entrevista')) NOT NULL,
-  created_by UUID REFERENCES profiles(id),
+  status TEXT DEFAULT 'pending', -- 'pending', 'completed'
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 6. Demands (Demandas da População / Gestão de Mandato)
-CREATE TABLE demands (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  voter_id UUID REFERENCES voters(id) ON DELETE CASCADE,
-  type TEXT CHECK (type IN ('saude', 'infraestrutura', 'educacao', 'seguranca', 'outros')) NOT NULL,
-  neighborhood TEXT,
-  description TEXT NOT NULL,
-  status TEXT CHECK (status IN ('pendente', 'em_andamento', 'resolvido')) DEFAULT 'pendente',
-  responsible_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+-- 8. Campaign Settings (Configurações de Identidade)
+CREATE TABLE campaign_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  name TEXT,
+  number TEXT,
+  slogan TEXT,
+  city TEXT,
+  state TEXT,
+  party TEXT,
+  photo_url TEXT,
+  vote_goal TEXT DEFAULT '0',
+  seats_count TEXT DEFAULT '0',
+  total_voters_city TEXT DEFAULT '0',
+  primary_color TEXT DEFAULT '#10B981',
+  secondary_color TEXT DEFAULT '#3B82F6',
+  tertiary_color TEXT DEFAULT '#2563EB',
+  election_type TEXT DEFAULT 'municipal',
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 7. Relationships (Relacionamento Contínuo)
-CREATE TABLE relationships (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  voter_id UUID REFERENCES voters(id) ON DELETE CASCADE,
-  birthday DATE,
-  last_contact TIMESTAMP WITH TIME ZONE,
-  next_contact TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+-- 9. Team Members (Substituindo localStorage)
+CREATE TABLE team_members (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  phone TEXT,
+  role TEXT DEFAULT 'volunteer',
+  neighborhoods JSONB DEFAULT '[]'::jsonb,
+  voters_count INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Configurando RLS (Row Level Security)
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE voters ENABLE ROW LEVEL SECURITY;
-ALTER TABLE interactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE team_areas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE demands ENABLE ROW LEVEL SECURITY;
-ALTER TABLE relationships ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campaign_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 
--- Políticas Básicas (Exemplo: Autenticados podem ler, Admins podem tudo)
-CREATE POLICY "Usuários logados podem ler eleitores" ON voters FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins podem inserir eleitores" ON voters FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('admin', 'coordinator'))
-);
+-- Políticas de Isolamento Total
+CREATE POLICY "Voters isolation" ON voters FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Events isolation" ON events FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Settings isolation" ON campaign_settings FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Team isolation" ON team_members FOR ALL USING (auth.uid() = user_id);
+
 -- TABELA DE ASSINATURAS (SAAS)
 CREATE TABLE subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

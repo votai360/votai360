@@ -6,17 +6,13 @@ import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import { Calendar as CalendarIcon, Clock, MapPin, Users, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 
+import { supabase } from '../lib/supabase';
+
 const getTodayStr = () => {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().split('T')[0];
 };
-
-const initialMockEvents = [
-  { id: 1, title: 'Caminhada no Centro', type: 'caminhada', date: getTodayStr(), time: '09:00 - 12:00', location: 'Praça da Matriz', team: 15, color: '#10B981', status: 'pending' },
-  { id: 2, title: 'Reunião com Lideranças', type: 'reunião', date: getTodayStr(), time: '14:30 - 16:00', location: 'Comitê Central', team: 5, color: '#3B82F6', status: 'pending' },
-  { id: 3, title: 'Panfletagem Feira Livre', type: 'panfletagem', date: getTodayStr(), time: '17:00 - 19:00', location: 'Vila Mariana', team: 8, color: '#F59E0B', status: 'pending' },
-];
 
 const formatDisplayDate = (dateStr) => {
   if (!dateStr) return '';
@@ -24,56 +20,116 @@ const formatDisplayDate = (dateStr) => {
   const date = new Date(y, m - 1, d);
   const options = { weekday: 'long', day: 'numeric', month: 'long' };
   let formatted = date.toLocaleDateString('pt-BR', options);
-  // Capitalize first letter
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
 export function CalendarView() {
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
-  // baseDate determines the start of the 7-day view
   const [baseDate, setBaseDate] = useState(new Date()); 
   const [formData, setFormData] = useState({ title: '', type: 'reunião', date: getTodayStr(), time: '', location: '', team: 0, color: '#3B82F6', status: 'pending' });
 
-  // Load from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('votai_events');
-    if (saved) {
-      // Ensure old events without date get today's date, and missing status get 'pending'
-      const parsed = JSON.parse(saved).map(ev => ({ ...ev, date: ev.date || getTodayStr(), status: ev.status || 'pending' }));
-      setEvents(parsed);
-    } else {
-      setEvents(initialMockEvents);
+  const fetchEvents = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setEvents([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('event_date');
+
+      if (error) throw error;
+      
+      // Adaptar dados do banco para o formato do estado
+      const adapted = data.map(ev => ({
+        ...ev,
+        date: ev.event_date.split('T')[0],
+        // O restante dos campos já deve coincidir ou ser adaptado conforme necessário
+      }));
+      
+      setEvents(adapted);
+    } catch (err) {
+      console.error('Erro ao buscar eventos:', err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        fetchEvents();
+      } else if (event === 'SIGNED_OUT') {
+        setEvents([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Save to localStorage
-  const saveEvents = (newEvents) => {
-    setEvents(newEvents);
-    localStorage.setItem('votai_events', JSON.stringify(newEvents));
-  };
-
-  const handleAddEvent = (e) => {
+  const handleAddEvent = async (e) => {
     e.preventDefault();
-    const newEvent = {
-      ...formData,
-      id: Date.now(),
-    };
-    saveEvents([newEvent, ...events]);
-    setIsModalOpen(false);
-    setSelectedDate(formData.date); // Switch to the date where the event was created
-    setFormData({ title: '', type: 'reunião', date: formData.date, time: '', location: '', team: 0, color: '#3B82F6', status: 'pending' });
-  };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Não autenticado');
 
-  const handleDeleteEvent = (id, title) => {
-    if (window.confirm(`Tem certeza que deseja excluir o evento "${title}"?`)) {
-      saveEvents(events.filter(ev => ev.id !== id));
+      const newEvent = {
+        title: formData.title,
+        description: '', // Opcional
+        event_date: formData.date + 'T' + (formData.time.includes(':') ? formData.time.split(' ')[0] : '00:00:00'),
+        location: formData.location,
+        type: formData.type === 'reunião' ? 'reuniao' : formData.type, // Ajuste de string conforme enum no DB
+        status: 'pending',
+        user_id: user.id
+      };
+
+      const { data, error } = await supabase
+        .from('events')
+        .insert([newEvent])
+        .select();
+
+      if (error) throw error;
+      
+      if (data) {
+        setEvents(prev => [...prev, { ...data[0], date: data[0].event_date.split('T')[0] }]);
+      }
+      setIsModalOpen(false);
+      setSelectedDate(formData.date);
+      setFormData({ title: '', type: 'reunião', date: formData.date, time: '', location: '', team: 0, color: '#3B82F6', status: 'pending' });
+    } catch (err) {
+      console.error('Erro ao adicionar evento:', err);
+      alert('Erro ao salvar evento no banco de dados.');
     }
   };
 
-  const handleToggleStatus = (id) => {
-    saveEvents(events.map(ev => ev.id === id ? { ...ev, status: ev.status === 'done' ? 'pending' : 'done' } : ev));
+  const handleDeleteEvent = async (id, title) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o evento "${title}"?`)) return;
+    try {
+      const { error } = await supabase.from('events').delete().eq('id', id);
+      if (error) throw error;
+      setEvents(prev => prev.filter(ev => ev.id !== id));
+    } catch (err) {
+      console.error('Erro ao excluir evento:', err);
+    }
+  };
+
+  const handleToggleStatus = async (id) => {
+    const event = events.find(ev => ev.id === id);
+    const newStatus = event.status === 'done' ? 'pending' : 'done';
+    try {
+      const { error } = await supabase.from('events').update({ status: newStatus }).eq('id', id);
+      if (error) throw error;
+      setEvents(prev => prev.map(ev => ev.id === id ? { ...ev, status: newStatus } : ev));
+    } catch (err) {
+      console.error('Erro ao atualizar status:', err);
+    }
   };
 
   const eventTypes = [

@@ -54,39 +54,62 @@ export function ConfigProvider({ children }) {
 
   const fetchConfig = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       await fetchSubscription();
-      // 1. Tenta carregar do localStorage primeiro (mais rápido e funciona offline)
-      const localConfig = localStorage.getItem('votaai_config');
+      
+      // 1. Tenta carregar do localStorage primeiro (específico do usuário)
+      const storageKey = `votaai_config_${user.id}`;
+      const localConfig = localStorage.getItem(storageKey);
       if (localConfig) {
         const parsed = JSON.parse(localConfig);
         setConfig(parsed);
         applyTheme(parsed);
       }
 
-      // 2. Tenta sincronizar com o Supabase
+      // 2. Tenta sincronizar com o Supabase filtrando por user_id
       const { data, error } = await supabase
         .from('campaign_settings')
         .select('*')
-        .limit(1)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (data) {
         setConfig(data);
         applyTheme(data);
-        localStorage.setItem('votaai_config', JSON.stringify(data));
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      } else {
+        // Se não houver config no banco, usa o padrão mas não salva por cima do local ainda
+        if (!localConfig) {
+          applyTheme(defaultConfig);
+        }
       }
     } catch (err) {
-      console.warn('Usando configurações locais ou padrão.');
-      if (!localStorage.getItem('votaai_config')) {
-        applyTheme(defaultConfig);
-      }
+      console.warn('Erro ao buscar configurações:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchConfig();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        fetchConfig();
+      } else if (event === 'SIGNED_OUT') {
+        setConfig(defaultConfig);
+        setSubscription({ status: 'inactive', plan: 'free', isTrial: false, isAdmin: false });
+        // Limpa localStorage sensível
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('votaai_')) localStorage.removeItem(key);
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const applyTheme = (themeData) => {
@@ -104,22 +127,28 @@ export function ConfigProvider({ children }) {
 
   const updateConfig = async (newConfig) => {
     try {
-      // 1. Salva localmente como backup (garante que a foto funcione mesmo sem a coluna no DB)
-      localStorage.setItem('votaai_config', JSON.stringify(newConfig));
-      setConfig(newConfig);
-      applyTheme(newConfig);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
 
-      // 2. Tenta salvar no Supabase (se a tabela/colunas existirem)
-      try {
-        const { data: existing } = await supabase.from('campaign_settings').select('id').limit(1).single();
-        
-        if (existing) {
-          await supabase.from('campaign_settings').update(newConfig).eq('id', existing.id);
-        } else {
-          await supabase.from('campaign_settings').insert([newConfig]);
-        }
-      } catch (dbError) {
-        console.warn('DB Sync failed, using local storage only:', dbError);
+      const storageKey = `votaai_config_${user.id}`;
+      const configWithUser = { ...newConfig, user_id: user.id };
+
+      // 1. Salva localmente
+      localStorage.setItem(storageKey, JSON.stringify(configWithUser));
+      setConfig(configWithUser);
+      applyTheme(configWithUser);
+
+      // 2. Salva no Supabase
+      const { data: existing } = await supabase
+        .from('campaign_settings')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (existing) {
+        await supabase.from('campaign_settings').update(configWithUser).eq('user_id', user.id);
+      } else {
+        await supabase.from('campaign_settings').insert([configWithUser]);
       }
 
       return { success: true };

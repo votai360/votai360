@@ -1,28 +1,83 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const TeamContext = createContext();
 
-// Mock inicial
-const initialTeam = [
-  { id: '1', name: 'Carlos Silva', role: 'coordinator', phone: '11999999999', area: 'Centro', performance: 85 },
-  { id: '2', name: 'Ana Oliveira', role: 'volunteer', phone: '11988888888', area: 'Zona Sul', performance: 60 },
-  { id: '3', name: 'Marcos Costa', role: 'volunteer', phone: '11977777777', area: 'Zona Norte', performance: 95 }
-];
-
-const initialTasks = [
-  { id: '1', title: 'Visitar liderança no Bairro Centro', assignedTo: '1', status: 'pending', deadline: 'Hoje' },
-  { id: '2', title: 'Panfletagem na feira livre', assignedTo: '2', status: 'done', deadline: 'Ontem' },
-  { id: '3', title: 'Cadastrar 10 novos eleitores', assignedTo: '3', status: 'doing', deadline: 'Amanhã' }
-];
-
 export function TeamProvider({ children }) {
-  const [team, setTeam] = useState(initialTeam);
-  const [tasks, setTasks] = useState(initialTasks);
+  const [team, setTeam] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const addMember = (member) => {
-    const newMember = { ...member, id: Date.now().toString(), performance: 0 };
-    setTeam([newMember, ...team]);
-    return { success: true };
+  const fetchTeam = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setTeam([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (error) throw error;
+      setTeam(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar equipe:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        fetchTeam();
+      } else if (event === 'SIGNED_OUT') {
+        setTeam([]);
+        setTasks([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const addMember = async (member) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Não autenticado');
+
+      const memberWithUser = { ...member, user_id: user.id };
+      const { data, error } = await supabase
+        .from('team_members')
+        .insert([memberWithUser])
+        .select();
+
+      if (error) throw error;
+      if (data) setTeam(prev => [data[0], ...prev]);
+      return { success: true };
+    } catch (err) {
+      console.error('Erro ao adicionar membro:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const deleteMember = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setTeam(prev => prev.filter(m => m.id !== id));
+      return { success: true };
+    } catch (err) {
+      console.error('Erro ao excluir membro:', err);
+      return { success: false, error: err.message };
+    }
   };
 
   const addTask = (task) => {
@@ -33,11 +88,6 @@ export function TeamProvider({ children }) {
 
   const updateTaskStatus = (taskId, newStatus) => {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-  };
-
-  const deleteMember = (id) => {
-    setTeam(prev => prev.filter(m => m.id !== id));
-    return { success: true };
   };
 
   return (

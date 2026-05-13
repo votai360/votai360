@@ -51,28 +51,50 @@ export function VoterProvider({ children }) {
   const fetchVoters = async () => {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setVoters([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('voters')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setVoters(data || []);
     } catch (error) {
-      console.warn('Erro de conexão com Supabase. Carregando dados Mock para demonstração:', error.message);
-      // Fallback para mock data
-      setVoters(mockVoters);
-      setError('Usando dados de demonstração (Erro de conexão)');
+      console.warn('Erro ao buscar eleitores:', error.message);
+      setVoters([]);
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        fetchVoters();
+      } else if (event === 'SIGNED_OUT') {
+        setVoters([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const addVoter = async (voterData) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const voterWithUser = { ...voterData, user_id: user.id };
+      
       const { data, error } = await supabase
         .from('voters')
-        .insert([voterData])
+        .insert([voterWithUser])
         .select();
 
       if (error) throw error;
@@ -82,10 +104,8 @@ export function VoterProvider({ children }) {
       }
       return { success: true };
     } catch (error) {
-      console.warn('Erro ao adicionar no Supabase. Adicionando localmente:', error.message);
-      const newVoter = { ...voterData, id: Date.now().toString(), created_at: new Date().toISOString(), interaction_score: 0, influence_radius: 0 };
-      setVoters(prev => [newVoter, ...prev]);
-      return { success: true, localOnly: true };
+      console.error('Erro ao adicionar eleitor:', error);
+      return { success: false, error: error.message };
     }
   };
 
@@ -104,9 +124,8 @@ export function VoterProvider({ children }) {
       }
       return { success: true };
     } catch (error) {
-      console.warn('Erro ao atualizar no Supabase. Atualizando localmente:', error.message);
-      setVoters(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
-      return { success: true, localOnly: true };
+      console.error('Erro ao atualizar eleitor:', error);
+      return { success: false, error: error.message };
     }
   };
 
@@ -122,9 +141,8 @@ export function VoterProvider({ children }) {
       setVoters(prev => prev.filter(v => v.id !== id));
       return { success: true };
     } catch (error) {
-      console.warn('Erro ao excluir no Supabase. Excluindo localmente:', error.message);
-      setVoters(prev => prev.filter(v => v.id !== id));
-      return { success: true, localOnly: true };
+      console.error('Erro ao excluir eleitor:', error);
+      return { success: false, error: error.message };
     }
   };
 

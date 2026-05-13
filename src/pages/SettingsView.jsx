@@ -27,11 +27,11 @@ export function SettingsView() {
     state: '',
     party: '',
     photo_url: '',
-    vote_goal: '1200', // Meta individual sugerida
-    seats_count: '17', // Macaé 2024
-    total_voters_city: '171182', // Macaé 2024
-    primary_color: '#1B4D3E',
-    secondary_color: '#F5A623',
+    vote_goal: '0',
+    seats_count: '0',
+    total_voters_city: '0',
+    primary_color: '#10B981',
+    secondary_color: '#3B82F6',
     tertiary_color: '#2563EB',
     election_type: 'municipal',
   });
@@ -84,10 +84,7 @@ export function SettingsView() {
       const stateData = brazilStats[stateKey];
       
       if (stateData) {
-        let seats = formData.election_type === 'estadual' ? stateData.state_seats : stateData.federal_seats;
-        
-        // Se for Federal e o estado for BR, assume 1 vaga (Presidente)
-        // Se for Federal e tiver estado, assume Deputado Federal
+        const seats = formData.election_type === 'estadual' ? stateData.state_seats : stateData.federal_seats;
         
         setFormData(prev => ({
           ...prev,
@@ -95,6 +92,14 @@ export function SettingsView() {
           seats_count: seats.toString()
         }));
       }
+    } else if (formData.election_type === 'municipal' && !formData.city) {
+      // Se voltar para municipal e não tiver cidade, limpa os campos para o usuário preencher
+      setFormData(prev => ({
+        ...prev,
+        total_voters_city: '0',
+        seats_count: '0',
+        vote_goal: '0'
+      }));
     }
   }, [formData.election_type, formData.state]);
 

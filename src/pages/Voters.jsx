@@ -96,6 +96,10 @@ export function Voters() {
         }
       }
 
+      // Atualiza painel de diagnóstico se ele existir
+      const debugEl = document.getElementById('debug-last-address');
+      if (debugEl) debugEl.innerText = query;
+
       // 2. Busca coordenadas no mapa com o melhor endereço disponível
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
       const data = await response.json();

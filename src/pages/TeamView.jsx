@@ -44,6 +44,10 @@ export function TeamView() {
         }
       }
 
+      // Atualiza painel de diagnóstico se ele existir
+      const debugEl = document.getElementById('debug-last-address');
+      if (debugEl) debugEl.innerText = query;
+
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
       const data = await response.json();
       if (data && data.length > 0) {

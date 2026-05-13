@@ -94,7 +94,7 @@ export function Layout({ children }) {
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {subscription?.isAdmin && (
             <button 
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate('/app/admin')}
               title="Painel Admin"
               style={{ 
                 background: 'rgba(245, 158, 11, 0.2)', 
@@ -109,7 +109,7 @@ export function Layout({ children }) {
             </button>
           )}
           <button 
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/app/settings')}
             style={{ 
               background: 'rgba(255,255,255,0.1)', 
               border: 'none', 

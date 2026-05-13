@@ -38,13 +38,13 @@ export function Login() {
         if (data.user && data.session === null) {
           setError('✅ Conta criada! Verifique seu e-mail para confirmar o acesso.');
         } else {
-          navigate('/');
+          navigate('/app');
         }
         setIsSignUp(false);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
-        navigate('/');
+        navigate('/app');
       }
     } catch (err) {
       let msg = err.message;

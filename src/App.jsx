@@ -1,5 +1,6 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
+import { LandingPage } from './pages/LandingPage';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Voters } from './pages/Voters';
@@ -18,19 +19,24 @@ function App() {
   return (
     <ConfigProvider>
       <Routes>
+        {/* Rota Pública de Marketing */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         
-        {/* Rotas Protegidas */}
-        <Route path="/" element={<AuthGuard><Layout><Dashboard /></Layout></AuthGuard>} />
-        <Route path="/voters" element={<AuthGuard><Layout><Voters /></Layout></AuthGuard>} />
-        <Route path="/strategy" element={<AuthGuard><Layout><StrategyView /></Layout></AuthGuard>} />
-        <Route path="/competitors" element={<AuthGuard><Layout><CompetitorsView /></Layout></AuthGuard>} />
-        <Route path="/map" element={<AuthGuard><Layout><MapView /></Layout></AuthGuard>} />
-        <Route path="/calendar" element={<AuthGuard><Layout><CalendarView /></Layout></AuthGuard>} />
-        <Route path="/team" element={<AuthGuard><Layout><TeamView /></Layout></AuthGuard>} />
-        <Route path="/messages" element={<AuthGuard><Layout><MessagesView /></Layout></AuthGuard>} />
-        <Route path="/settings" element={<AuthGuard><Layout><SettingsView /></Layout></AuthGuard>} />
-        <Route path="/admin" element={<AuthGuard><Layout><AdminView /></Layout></AuthGuard>} />
+        {/* Rotas Protegidas do App */}
+        <Route path="/app" element={<AuthGuard><Layout><Dashboard /></Layout></AuthGuard>} />
+        <Route path="/app/voters" element={<AuthGuard><Layout><Voters /></Layout></AuthGuard>} />
+        <Route path="/app/strategy" element={<AuthGuard><Layout><StrategyView /></Layout></AuthGuard>} />
+        <Route path="/app/competitors" element={<AuthGuard><Layout><CompetitorsView /></Layout></AuthGuard>} />
+        <Route path="/app/map" element={<AuthGuard><Layout><MapView /></Layout></AuthGuard>} />
+        <Route path="/app/calendar" element={<AuthGuard><Layout><CalendarView /></Layout></AuthGuard>} />
+        <Route path="/app/team" element={<AuthGuard><Layout><TeamView /></Layout></AuthGuard>} />
+        <Route path="/app/messages" element={<AuthGuard><Layout><MessagesView /></Layout></AuthGuard>} />
+        <Route path="/app/settings" element={<AuthGuard><Layout><SettingsView /></Layout></AuthGuard>} />
+        <Route path="/app/admin" element={<AuthGuard><Layout><AdminView /></Layout></AuthGuard>} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ConfigProvider>
   );

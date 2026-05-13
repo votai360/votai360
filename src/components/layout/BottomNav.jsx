@@ -41,27 +41,27 @@ export function BottomNav() {
 
   return (
     <nav style={navStyle}>
-      <NavLink to="/" style={getLinkStyle}>
+      <NavLink to="/app" style={getLinkStyle} end>
         <LayoutDashboard {...iconProps} />
         <span>Resumo</span>
       </NavLink>
-      <NavLink to="/voters" style={getLinkStyle}>
+      <NavLink to="/app/voters" style={getLinkStyle}>
         <Users {...iconProps} />
         <span>Eleitores</span>
       </NavLink>
-      <NavLink to="/strategy" style={getLinkStyle}>
+      <NavLink to="/app/strategy" style={getLinkStyle}>
         <Target {...iconProps} />
         <span>Estratégia</span>
       </NavLink>
-      <NavLink to="/calendar" style={getLinkStyle}>
+      <NavLink to="/app/calendar" style={getLinkStyle}>
         <Calendar {...iconProps} />
         <span>Agenda</span>
       </NavLink>
-      <NavLink to="/map" style={getLinkStyle}>
+      <NavLink to="/app/map" style={getLinkStyle}>
         <MapIcon {...iconProps} />
         <span>Mapa</span>
       </NavLink>
-      <NavLink to="/team" style={getLinkStyle}>
+      <NavLink to="/app/team" style={getLinkStyle}>
         <ShieldCheck {...iconProps} />
         <span>Equipe</span>
       </NavLink>

@@ -203,7 +203,7 @@ export function MapView() {
                 </Popup>
               </Marker>
             ) : null
-          ))}
+          })}
         </MapContainer>
         
         {/* Legenda Flutuante */}

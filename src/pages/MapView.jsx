@@ -8,6 +8,7 @@ import { useConfig } from '../store/ConfigContext';
 import { Badge } from '../components/ui/Badge';
 import { Search, MapPin, Filter, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { supabase } from '../lib/supabase';
 
 // Ícones Customizados
 const createCustomIcon = (color, isTeam = false) => {

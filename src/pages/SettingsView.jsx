@@ -5,6 +5,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Save, UserCircle, Palette, LogOut } from 'lucide-react';
 import { brazilStats } from '../data/brazil_stats';
+import { cityStats } from '../data/city_stats';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
@@ -56,6 +57,25 @@ export function SettingsView() {
       });
     }
   }, [config]);
+
+  // Efeito para puxar dados automáticos por Cidade (Municipal)
+  useEffect(() => {
+    if (formData.election_type === 'municipal' && formData.city) {
+      const cityKey = formData.city.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const foundCity = Object.keys(cityStats).find(k => 
+        k.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === cityKey
+      );
+
+      if (foundCity) {
+        const data = cityStats[foundCity];
+        setFormData(prev => ({
+          ...prev,
+          total_voters_city: data.voters.toString(),
+          seats_count: data.seats.toString()
+        }));
+      }
+    }
+  }, [formData.city, formData.election_type]);
 
   // Efeito para puxar dados automáticos por Estado (Estadual/Federal)
   useEffect(() => {

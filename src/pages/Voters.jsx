@@ -153,7 +153,6 @@ export function Voters() {
       supportLevel: formData.supportLevel,
       latitude: coords ? coords.lat : null,
       longitude: coords ? coords.lon : null,
-      interaction_score: 10,
       tags: finalTags,
     });
     

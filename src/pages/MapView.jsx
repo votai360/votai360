@@ -79,6 +79,21 @@ export function MapView() {
     };
     checkUser();
   }, []);
+
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'debug_map_log') {
+        const el = document.getElementById('debug-map-log');
+        if (el) el.innerText = e.newValue;
+      }
+      if (e.key === 'debug_last_address') {
+        const el = document.getElementById('debug-last-address');
+        if (el) el.innerText = e.newValue;
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);

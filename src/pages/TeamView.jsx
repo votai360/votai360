@@ -54,6 +54,14 @@ export function TeamView() {
         }
       });
       const data = await response.json();
+      
+      const logMsg = data && data.length > 0 ? "Achou! ✅" : "Vazio! ❌ (Mapa não conhece esse endereço)";
+      localStorage.setItem('debug_map_log', logMsg);
+      localStorage.setItem('debug_last_address', query);
+
+      const logEl = document.getElementById('debug-map-log');
+      if (logEl) logEl.innerText = logMsg;
+
       if (data && data.length > 0) {
         return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
       }

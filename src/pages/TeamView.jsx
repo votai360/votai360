@@ -171,7 +171,7 @@ export function TeamView() {
                   <div>
                     <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: '700', color: 'var(--color-text-primary)' }}>{member.name}</h4>
                     <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
-                      Região: <strong style={{ color: 'var(--color-text-primary)' }}>{member.area}</strong> • Contato: {member.phone}
+                      CEP: <strong style={{ color: 'var(--color-text-primary)' }}>{member.cep || 'Não informado'}</strong> • Contato: {member.phone}
                     </p>
                     {member.cep && (
                       <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>

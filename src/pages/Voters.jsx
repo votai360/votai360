@@ -305,7 +305,7 @@ export function Voters() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <MapPin size={14} />
-                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{voter.neighborhood}</span>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{voter.cep || voter.neighborhood || 'Sem CEP'}</span>
                     {voter.birth_date && (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', marginLeft: '0.5rem' }}>
                         <Plus size={12} /> {new Date(voter.birth_date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}

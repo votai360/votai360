@@ -53,8 +53,9 @@ export function MapView() {
   const [filterLevel, setFilterLevel] = useState('all');
 
   const filteredVoters = voters.filter(voter => {
+    const level = voter.supportLevel || voter.support_level;
     if (filterLevel === 'all') return true;
-    return voter.supportLevel === filterLevel;
+    return level === filterLevel;
   });
 
   useEffect(() => {
@@ -67,13 +68,15 @@ export function MapView() {
           if (data && data.length > 0) {
             setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
           } else if (voters && voters.length > 0) {
-             setMapCenter([voters[0].latitude, voters[0].longitude]);
+             const firstV = voters.find(v => v.latitude && v.longitude);
+             if (firstV) setMapCenter([firstV.latitude, firstV.longitude]);
           }
         } catch (err) {
           console.error("Erro ao buscar coordenadas da campanha", err);
         }
       } else if (voters && voters.length > 0) {
-        setMapCenter([voters[0].latitude, voters[0].longitude]);
+        const firstV = voters.find(v => v.latitude && v.longitude);
+        if (firstV) setMapCenter([firstV.latitude, firstV.longitude]);
       }
     }
 
@@ -178,12 +181,13 @@ export function MapView() {
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" // Mudado para light_all para visual mais limpo/moderno
           />
           
-          {filteredVoters.map(voter => (
-            voter.latitude && voter.longitude ? (
+          {filteredVoters.map(voter => {
+            const level = voter.supportLevel || voter.support_level;
+            return voter.latitude && voter.longitude ? (
               <Marker 
                 key={voter.id} 
                 position={[voter.latitude, voter.longitude]}
-                icon={icons[voter.supportLevel] || icons.neutral}
+                icon={icons[level] || icons.neutral}
               >
                 <Popup className="premium-popup">
                   <div style={{ minWidth: '160px', padding: '0.5rem 0' }}>

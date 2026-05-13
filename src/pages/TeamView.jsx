@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTeam } from '../store/TeamContext';
 import { useVoters } from '../store/VoterContext';
+import { useConfig } from '../store/ConfigContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -11,6 +12,7 @@ import { Users, UserPlus, CheckCircle, Clock, CheckSquare, Trophy, Trash2 } from
 export function TeamView() {
   const { team, tasks, addMember, addTask, updateTaskStatus, deleteMember } = useTeam();
   const { addVoter } = useVoters();
+  const { config } = useConfig();
   const [activeTab, setActiveTab] = useState('members');
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -25,7 +27,9 @@ export function TeamView() {
 
   const getCoordinates = async (neighborhood, cep) => {
     try {
-      const query = cep && cep.length >= 8 ? `${cep}, Brasil` : `${neighborhood}, ${config.city || ''}, ${config.state || ''}, Brasil`;
+      const query = cep && cep.length >= 8 
+        ? `${cep}, ${config.city || ''}, ${config.state || ''}, Brasil` 
+        : `${neighborhood}, ${config.city || ''}, ${config.state || ''}, Brasil`;
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
       const data = await response.json();
       if (data && data.length > 0) {

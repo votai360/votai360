@@ -97,7 +97,8 @@ export function TeamProvider({ children }) {
       addMember,
       addTask,
       updateTaskStatus,
-      deleteMember
+      deleteMember,
+      refreshTeam: fetchTeam
     }}>
       {children}
     </TeamContext.Provider>

@@ -60,15 +60,24 @@ function MapBoundsUpdater({ points }) {
 }
 
 export function MapView() {
-  const { voters } = useVoters();
-  const { team } = useTeam();
+  const { voters, refreshVoters } = useVoters();
+  const { team, refreshTeam } = useTeam();
   const { config } = useConfig();
-  const [userId, setUserId] = useState('...');
+  const [userId, setUserId] = useState('Carregando...');
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) setUserId(data.user.id.substring(0, 8));
-    });
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        setUserId(data.user.id.substring(0, 8));
+        // Forçar uma recarga para garantir que os dados venham com o ID certo
+        if (voters.length === 0) refreshVoters();
+        if (team.length === 0) refreshTeam();
+      } else {
+        setUserId('Desconectado');
+      }
+    };
+    checkUser();
   }, []);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [searchQuery, setSearchQuery] = useState('');

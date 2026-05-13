@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Map as MapIcon, Calendar, Target, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, Map as MapIcon, Calendar, Target, ShieldCheck, FileText } from 'lucide-react';
 
 export function BottomNav() {
   const navStyle = {
@@ -57,9 +57,9 @@ export function BottomNav() {
         <Calendar {...iconProps} />
         <span>Agenda</span>
       </NavLink>
-      <NavLink to="/app/map" style={getLinkStyle}>
-        <MapIcon {...iconProps} />
-        <span>Mapa</span>
+      <NavLink to="/app/reports" style={getLinkStyle}>
+        <FileText {...iconProps} />
+        <span>Relatórios</span>
       </NavLink>
       <NavLink to="/app/team" style={getLinkStyle}>
         <ShieldCheck {...iconProps} />

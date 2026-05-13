@@ -23,6 +23,7 @@ export function Voters() {
     name: '',
     phone: '',
     neighborhood: '',
+    birth_date: '',
     supportLevel: 'neutral',
     tags: [],
     isLeader: false,
@@ -37,6 +38,11 @@ export function Voters() {
     voter.neighborhood.toLowerCase().includes(searchTerm.toLowerCase()) ||
     voter.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Identifica aniversariantes do dia
+  const today = new Date();
+  const todayStr = `${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+  const birthdayBoys = voters.filter(v => v.birth_date && v.birth_date.includes(todayStr));
 
   const getSupportBadge = (level) => {
     switch(level) {
@@ -117,6 +123,7 @@ export function Voters() {
       name: formData.name,
       phone: formData.phone,
       neighborhood: formData.neighborhood,
+      birth_date: formData.birth_date || null,
       supportLevel: formData.supportLevel,
       latitude: coords ? coords.lat : null,
       longitude: coords ? coords.lon : null,
@@ -127,17 +134,23 @@ export function Voters() {
     setLoading(false);
     if (result.success) {
       setJustRegistered({ ...formData, tags: finalTags });
-      setFormData({ name: '', phone: '', neighborhood: '', supportLevel: 'neutral', tags: [], isLeader: false });
+      setFormData({ name: '', phone: '', neighborhood: '', birth_date: '', supportLevel: 'neutral', tags: [], isLeader: false });
     } else {
       alert('Erro ao cadastrar eleitor: ' + result.error);
     }
   };
 
-  const openWhatsApp = (voter = justRegistered) => {
+  const openWhatsApp = (voter = justRegistered, template = 'welcome') => {
     if (!voter || !voter.phone) return;
     
     const firstName = voter.name.split(' ')[0];
-    const message = whatsappTemplates.welcome(firstName, config.name);
+    let message = "";
+    
+    if (template === 'birthday') {
+      message = whatsappTemplates.birthday(firstName, config.name);
+    } else {
+      message = whatsappTemplates.welcome(firstName, config.name);
+    }
     
     const url = generateWhatsAppLink(voter.phone, message);
     window.open(url, '_blank');
@@ -150,21 +163,21 @@ export function Voters() {
 
   const openNewModal = () => {
     setJustRegistered(null);
-    setFormData({ name: '', phone: '', neighborhood: '', supportLevel: 'neutral', tags: [], isLeader: false });
+    setFormData({ name: '', phone: '', neighborhood: '', birth_date: '', supportLevel: 'neutral', tags: [], isLeader: false });
     setIsModalOpen(true);
   };
 
   const exportToCSV = () => {
     if (voters.length === 0) return;
     
-    const headers = ['Nome', 'Telefone', 'Bairro', 'Nível de Apoio', 'Tags', 'Última Visita'];
+    const headers = ['Nome', 'Telefone', 'Bairro', 'Nascimento', 'Nível de Apoio', 'Tags'];
     const rows = voters.map(v => [
       v.name,
       v.phone,
       v.neighborhood,
+      v.birth_date || '',
       v.supportLevel,
-      v.tags?.join('; ') || '',
-      v.lastVisit || ''
+      v.tags?.join('; ') || ''
     ]);
 
     const csvContent = [
@@ -199,6 +212,34 @@ export function Voters() {
           </Button>
         </div>
       </header>
+
+      {/* ALERTAS DE ANIVERSÁRIO */}
+      {birthdayBoys.length > 0 && (
+        <Card glass padding="1rem" style={{ marginBottom: '2rem', border: '1px solid rgba(var(--color-primary-rgb), 0.3)', background: 'rgba(var(--color-primary-rgb), 0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+            <div style={{ background: 'var(--color-primary)', color: 'white', padding: '0.5rem', borderRadius: '50%' }}>
+              <Plus size={20} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--color-text-primary)' }}>Aniversariantes de Hoje! 🎉</h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Não deixe passar em branco, envie um parabéns!</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+            {birthdayBoys.map(boy => (
+              <div key={boy.id} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)' }}>
+                <span style={{ fontWeight: '600', fontSize: '0.85rem' }}>{boy.name.split(' ')[0]}</span>
+                <button 
+                  onClick={() => openWhatsApp(boy, 'birthday')}
+                  style={{ background: '#25D366', border: 'none', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                >
+                  <Send size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div style={{ position: 'relative', marginBottom: '2rem' }}>
         <Search size={20} color="var(--color-text-secondary)" style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)' }} />
@@ -260,6 +301,11 @@ export function Voters() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <MapPin size={14} />
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{voter.neighborhood}</span>
+                    {voter.birth_date && (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', marginLeft: '0.5rem' }}>
+                        <Plus size={12} /> {new Date(voter.birth_date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -339,13 +385,21 @@ export function Voters() {
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
             />
-            <Input 
-              label="WhatsApp (Apenas números)" 
-              type="number"
-              required 
-              value={formData.phone}
-              onChange={e => setFormData({...formData, phone: e.target.value})}
-            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <Input 
+                label="WhatsApp" 
+                type="number"
+                required 
+                value={formData.phone}
+                onChange={e => setFormData({...formData, phone: e.target.value})}
+              />
+              <Input 
+                label="Data de Nascimento" 
+                type="date"
+                value={formData.birth_date}
+                onChange={e => setFormData({...formData, birth_date: e.target.value})}
+              />
+            </div>
             <Input 
               label="Bairro" 
               required 

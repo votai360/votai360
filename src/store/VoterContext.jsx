@@ -32,10 +32,15 @@ export function VoterProvider({ children }) {
     if (voters.length > 0) {
       const today = new Date().toISOString().split('T')[0];
       const newTodayCount = voters.filter(v => v.created_at && v.created_at.startsWith(today)).length;
-      const strongCount = voters.filter(v => v.supportLevel === 'strong').length;
       
-      const supporterCount = voters.filter(v => v.supportLevel === 'strong' || v.supportLevel === 'supporter').length;
-      const leaderCount = voters.filter(v => v.tags?.includes('liderança')).length;
+      // Suporte para ambos os formatos (Banco de Dados e Código)
+      const isStrong = (v) => v.supportLevel === 'strong' || v.support_level === 'strong';
+      const isSupporter = (v) => v.supportLevel === 'supporter' || v.support_level === 'supporter' || isStrong(v);
+
+      const strongCount = voters.filter(isStrong).length;
+      const supporterCount = voters.filter(isSupporter).length;
+      
+      const leaderCount = voters.filter(v => v.tags?.includes('liderança') || v.tags?.includes('Equipe')).length;
       const conversion = Math.round((supporterCount / voters.length) * 100) || 0;
 
       setStats({

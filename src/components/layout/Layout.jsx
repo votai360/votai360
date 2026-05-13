@@ -8,8 +8,8 @@ export function Layout({ children }) {
   const { config, subscription } = useConfig();
   const navigate = useNavigate();
 
-  // Lógica de Bloqueio (Paywall)
-  // Admins nunca são bloqueados.
+  // Lógica de Bloqueio (Paywall) Comercial
+  // Admins e usuários com assinatura ativa têm acesso total.
   const isBlocked = subscription?.status === 'inactive' && !subscription?.isTrial && !subscription?.isAdmin;
 
   if (isBlocked) {

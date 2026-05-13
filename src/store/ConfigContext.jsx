@@ -138,18 +138,12 @@ export function ConfigProvider({ children }) {
       setConfig(configWithUser);
       applyTheme(configWithUser);
 
-      // 2. Salva no Supabase
-      const { data: existing } = await supabase
+      // 2. Salva no Supabase (Upsert resolve insert ou update automaticamente)
+      const { error: dbError } = await supabase
         .from('campaign_settings')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .upsert(configWithUser, { onConflict: 'user_id' });
       
-      if (existing) {
-        await supabase.from('campaign_settings').update(configWithUser).eq('user_id', user.id);
-      } else {
-        await supabase.from('campaign_settings').insert([configWithUser]);
-      }
+      if (dbError) throw dbError;
 
       return { success: true };
     } catch (error) {

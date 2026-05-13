@@ -23,6 +23,7 @@ CREATE TABLE voters (
   tags JSONB DEFAULT '[]'::jsonb,
   latitude DECIMAL,
   longitude DECIMAL,
+  birth_date DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -68,6 +69,7 @@ CREATE TABLE team_members (
   name TEXT NOT NULL,
   phone TEXT,
   role TEXT DEFAULT 'volunteer',
+  area TEXT,
   neighborhoods JSONB DEFAULT '[]'::jsonb,
   voters_count INTEGER DEFAULT 0,
   status TEXT DEFAULT 'active',
@@ -136,3 +138,17 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- CONFIGURAÇÃO DE STORAGE (PARA FOTOS DOS CANDIDATOS)
+-- Nota: Execute isso no Editor SQL do Supabase
+-- Certifique-se de ter criado o bucket 'candidates' primeiro no painel de Storage
+
+-- 1. Permitir que qualquer pessoa veja as fotos (Público)
+-- CREATE POLICY "Acesso Público" ON storage.objects FOR SELECT USING (bucket_id = 'candidates');
+
+-- 2. Permitir que usuários autenticados façam upload
+-- CREATE POLICY "Upload Autenticado" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'candidates' AND auth.role() = 'authenticated');
+
+-- 3. Permitir que usuários atualizem suas próprias fotos
+-- CREATE POLICY "Update Autenticado" ON storage.objects FOR UPDATE USING (bucket_id = 'candidates' AND auth.role() = 'authenticated');
+

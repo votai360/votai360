@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { Search, Target, Users, Zap, CheckCircle2, Circle, Edit3, Save, X, Plus, Database, GitMerge, Trash2 } from 'lucide-react';
+import { Search, Target, Users, Zap, CheckCircle2, Circle, Edit3, Save, X, Plus, Database, GitMerge, Trash2, AlertCircle } from 'lucide-react';
 
 
 export function CompetitorsView() {
@@ -21,6 +21,14 @@ export function CompetitorsView() {
     return saved ? JSON.parse(saved) : [];
   });
   const [newFed, setNewFed] = useState({ partido1: '', partido2: '' });
+
+  if (!config) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--color-text-secondary)' }}>
+        Carregando inteligência de dados...
+      </div>
+    );
+  }
 
   const addFederacao = () => {
     const p1 = newFed.partido1.toUpperCase().trim();
@@ -89,8 +97,17 @@ export function CompetitorsView() {
     }
   };
 
-  const userParty = (config.party || 'PRD').toUpperCase();
-  const userGoal = parseInt(config.vote_goal) || 1400;
+  // Proteção contra dados nulos
+  if (!config) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--color-text-secondary)' }}>
+        Carregando inteligência de dados...
+      </div>
+    );
+  }
+
+  const userParty = (config.party || 'PARTIDO').toUpperCase();
+  const userGoal = parseInt(config.vote_goal) || 1000;
   
   // SIMULADOR AVANÇADO
   const activeCandidates = candidates.filter(c => c.active);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTeam } from '../store/TeamContext';
+import { useVoters } from '../store/VoterContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -9,6 +10,7 @@ import { Users, UserPlus, CheckCircle, Clock, CheckSquare, Trophy, Trash2 } from
 
 export function TeamView() {
   const { team, tasks, addMember, addTask, updateTaskStatus, deleteMember } = useTeam();
+  const { addVoter } = useVoters();
   const [activeTab, setActiveTab] = useState('members');
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -21,11 +23,26 @@ export function TeamView() {
   const rankedTeam = [...team].sort((a, b) => (b.voters_count || 0) - (a.voters_count || 0));
   const topThree = rankedTeam.slice(0, 3);
 
-  const handleMemberSubmit = (e) => {
+  const handleMemberSubmit = async (e) => {
     e.preventDefault();
-    addMember(memberForm);
-    setIsMemberModalOpen(false);
-    setMemberForm({ name: '', phone: '', area: '', role: 'volunteer', voters_count: 0 });
+    const result = await addMember(memberForm);
+    if (result.success) {
+      // Automação: Adicionar também à lista de eleitores
+      // Usando 'support_level' para bater exatamente com a coluna do banco
+      await addVoter({
+        name: memberForm.name,
+        phone: memberForm.phone,
+        neighborhood: memberForm.area || 'Equipe',
+        support_level: 'strong', 
+        tags: ['Membro da Equipe', memberForm.role === 'coordinator' ? 'Coordenador' : 'Voluntário']
+      });
+
+      setIsMemberModalOpen(false);
+      setMemberForm({ name: '', phone: '', area: '', role: 'volunteer', voters_count: 0 });
+      alert(`Sucesso! ${memberForm.name} agora faz parte da sua equipe e da sua base de votos fortes.`);
+    } else {
+      alert('Erro ao adicionar membro: ' + result.error);
+    }
   };
 
   const handleDeleteMember = (id, name) => {

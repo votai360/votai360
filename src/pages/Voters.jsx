@@ -44,32 +44,32 @@ export function Voters() {
   const today = new Date();
   const todayStr = `${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
   const birthdayBoys = voters.filter(v => v.birth_date && v.birth_date.includes(todayStr));
-
-  const getSupportBadge = (level) => {
-    const l = level === 'strong' ? 'strong' : level === 'supporter' ? 'supporter' : level === 'neutral' ? 'neutral' : 'cold';
+  const getSupportLabel = (voter) => {
+    const l = voter.supportLevel || voter.support_level || 'neutral';
     switch(l) {
       case 'strong': return <Badge variant="strong">Apoiador Forte</Badge>;
       case 'supporter': return <Badge variant="supporter">Apoiador</Badge>;
       case 'neutral': return <Badge variant="neutral">Neutro</Badge>;
       case 'cold': return <Badge variant="cold">Frio</Badge>;
-      default: return null;
+      default: return <Badge variant="neutral">Neutro</Badge>;
     }
   };
 
   const getInitials = (name) => {
+    if (!name) return '??';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
-  const getAvatarColor = (level) => {
-    const l = level === 'strong' ? 'strong' : level === 'supporter' ? 'supporter' : level === 'neutral' ? 'neutral' : 'cold';
+  const getAvatarColor = (voter) => {
+    const l = voter.supportLevel || voter.support_level || 'neutral';
     switch(l) {
       case 'strong': return 'linear-gradient(135deg, #10B981, #059669)';
       case 'supporter': return 'linear-gradient(135deg, #3B82F6, #2563EB)';
       case 'neutral': return 'linear-gradient(135deg, #9CA3AF, #6B7280)';
       case 'cold': return 'linear-gradient(135deg, #EF4444, #DC2626)';
-      default: return 'var(--color-primary)';
+      default: return 'var(--color-text-muted)';
     }
-  };
+  };;
 
   const formatPhone = (phone) => {
     if (!phone) return '';
@@ -286,7 +286,7 @@ export function Voters() {
                 width: '50px',
                 height: '50px',
                 borderRadius: '50%',
-                background: getAvatarColor(voter.supportLevel),
+                background: getAvatarColor(voter),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

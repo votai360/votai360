@@ -1,0 +1,32 @@
+// Dados Estatísticos do Eleitorado e Legislativo por Estado (Brasil)
+// Fonte: TSE 2024 / Regras Constitucionais para Deputados
+export const brazilStats = {
+  "AC": { voters: 615511, federal_seats: 8, state_seats: 24 },
+  "AL": { voters: 2445831, federal_seats: 9, state_seats: 27 },
+  "AM": { voters: 2649060, federal_seats: 8, state_seats: 24 },
+  "AP": { voters: 571615, federal_seats: 8, state_seats: 24 },
+  "BA": { voters: 11400000, federal_seats: 39, state_seats: 63 },
+  "CE": { voters: 7019532, federal_seats: 22, state_seats: 46 },
+  "DF": { voters: 2243307, federal_seats: 8, state_seats: 24 },
+  "ES": { voters: 3014318, federal_seats: 10, state_seats: 30 },
+  "GO": { voters: 5122144, federal_seats: 17, state_seats: 41 },
+  "MA": { voters: 5214000, federal_seats: 18, state_seats: 42 },
+  "MG": { voters: 16469155, federal_seats: 53, state_seats: 77 },
+  "MS": { voters: 2032593, federal_seats: 8, state_seats: 24 },
+  "MT": { voters: 2616238, federal_seats: 8, state_seats: 24 },
+  "PA": { voters: 6415000, federal_seats: 17, state_seats: 41 },
+  "PB": { voters: 3225312, federal_seats: 12, state_seats: 36 },
+  "PE": { voters: 7152000, federal_seats: 25, state_seats: 49 },
+  "PI": { voters: 2611000, federal_seats: 10, state_seats: 30 },
+  "PR": { voters: 8645000, federal_seats: 30, state_seats: 54 },
+  "RJ": { voters: 13033505, federal_seats: 46, state_seats: 70 },
+  "RN": { voters: 2640000, federal_seats: 8, state_seats: 24 },
+  "RO": { voters: 1275000, federal_seats: 8, state_seats: 24 },
+  "RR": { voters: 388000, federal_seats: 8, state_seats: 24 },
+  "RS": { voters: 8680000, federal_seats: 31, state_seats: 55 },
+  "SC": { voters: 5640000, federal_seats: 16, state_seats: 40 },
+  "SE": { voters: 1750000, federal_seats: 8, state_seats: 24 },
+  "SP": { voters: 34667793, federal_seats: 70, state_seats: 94 },
+  "TO": { voters: 1130000, federal_seats: 8, state_seats: 24 },
+  "BR": { voters: 158000000, federal_seats: 1, state_seats: 1 } // Para eleição presidencial
+};

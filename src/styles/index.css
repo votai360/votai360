@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Design System VotAí - Paleta Política Premium */
+  --color-primary: #1B4D3E; /* Verde escuro político - Confiança */
+  --color-primary-light: #2A725C;
+  --color-primary-dark: #123329;
+  
+  --color-secondary: #F5A623; /* Amarelo dourado - Destaque/Ação */
+  --color-secondary-light: #F7B94E;
+  --color-secondary-dark: #D48C11;
+
+  --color-accent: #2563EB; /* Azul - Links/Info */
+  
+  /* Status / Graus de Apoio */
+  --color-support-cold: #3B82F6; /* Azul */
+  --color-support-neutral: #F59E0B;
+  --color-support-supporter: #22C55E;
+  --color-support-strong: #EF4444; /* Vermelho */
+
+  /* Dark Mode Padrão */
+  --color-background: #0F1419;
+  --color-surface: #1A1F2E;
+  --color-surface-hover: #232A3B;
+  --color-surface-border: #2C3549;
+
+  /* Texto */
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-text-inverse: #0F1419;
+
+  /* Estados */
+  --color-error: #EF4444;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+
+  /* Tipografia */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Espaçamentos e Bordas */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  /* Animações */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+}
+
+/* Reset Global */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Tipografia Base */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: #3B82F6;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Utilitários Visuais */
+.glass-panel {
+  background: rgba(26, 31, 46, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-secondary), #FFD700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Responsividade Mobile-First base */
+.container {
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Scrollbar dark */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-border);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-support-cold);
+}
+
+/* Leaflet dark theme tweaks */
+.leaflet-container {
+  background: var(--color-background) !important;
+  font-family: var(--font-sans) !important;
+}
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+}

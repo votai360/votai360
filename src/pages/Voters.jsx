@@ -316,7 +316,7 @@ export function Voters() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', alignItems: 'center' }}>
-                  {getSupportBadge(voter.supportLevel)}
+                  {getSupportLabel(voter)}
                   {voter.tags && voter.tags.length > 0 && voter.tags.slice(0, 3).map(tag => (
                     <Badge 
                       key={tag} 

@@ -136,8 +136,11 @@ export function MapView() {
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Visualização geográfica da base e heatmap de força.</p>
         
         {/* PAINEL DE DIAGNÓSTICO TEMPORÁRIO */}
-        <div style={{ backgroundColor: '#FEF3C7', border: '1px solid #F59E0B', padding: '0.5rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem', color: '#92400E' }}>
-          <strong>Diagnóstico:</strong> Total de Pontos: {allPoints.length} | Com Coordenadas: {allPoints.filter(p => p.latitude && p.longitude).length}
+        <div style={{ backgroundColor: '#FEF3C7', border: '1px solid #F59E0B', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem', color: '#92400E' }}>
+          <strong>Diagnóstico do Sistema:</strong><br/>
+          • Cidade Base: {config.city || 'Não configurada'} | Estado: {config.state || 'Não configurado'}<br/>
+          • Dados: Total: {allPoints.length} | Com GPS: {allPoints.filter(p => p.latitude && p.longitude).length}<br/>
+          • Último CEP buscado: {searchQuery || 'Nenhum'}
         </div>
         
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.75rem' }}>
@@ -218,7 +221,7 @@ export function MapView() {
               <Marker 
                 key={`${point.isTeam ? 'team' : 'voter'}-${point.id}`} 
                 position={[lat, lon]}
-                icon={icons[level] || icons.neutral}
+                icon={icons[point.isTeam ? 'team' : level] || icons.neutral}
               >
                 <Popup className="premium-popup">
                   <div style={{ minWidth: '160px', padding: '0.5rem 0' }}>
@@ -226,12 +229,15 @@ export function MapView() {
                       {point.isTeam && <ShieldCheck size={18} color="#D97706" />}
                       <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1E293B', fontWeight: '700' }}>{point.name}</h3>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', marginBottom: '4px' }}>
                       <MapPin size={12} />
                       <span style={{ fontSize: '0.85rem' }}>{point.neighborhood || point.area || point.cep}</span>
                     </div>
-                    <Badge variant={point.isTeam ? 'primary' : level} style={{ width: '100%', justifyContent: 'center' }}>
-                      {point.isTeam ? 'Equipe' : level}
+                    <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginBottom: '12px', fontFamily: 'monospace' }}>
+                      GPS: {lat.toFixed(4)}, {lon.toFixed(4)}
+                    </div>
+                    <Badge variant={point.isTeam ? 'strong' : level} style={{ width: '100%', justifyContent: 'center' }}>
+                      {point.isTeam ? 'Equipe (Forte)' : level}
                     </Badge>
                   </div>
                 </Popup>

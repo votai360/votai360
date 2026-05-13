@@ -16,30 +16,55 @@ export function TeamView() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   // Forms
-  const [memberForm, setMemberForm] = useState({ name: '', phone: '', area: '', role: 'volunteer', voters_count: 0 });
+  const [memberForm, setMemberForm] = useState({ name: '', phone: '', area: '', cep: '', role: 'volunteer', voters_count: 0 });
   const [taskForm, setTaskForm] = useState({ title: '', assignedTo: '', deadline: '' });
 
   // Ranking
   const rankedTeam = [...team].sort((a, b) => (b.voters_count || 0) - (a.voters_count || 0));
   const topThree = rankedTeam.slice(0, 3);
 
+  const getCoordinates = async (neighborhood, cep) => {
+    try {
+      const query = cep && cep.length >= 8 ? cep : `${neighborhood}, ${config.city || ''}, ${config.state || ''}, Brasil`;
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+      }
+    } catch (e) {
+      console.error("Erro ao geocodificar", e);
+    }
+    return null;
+  };
+
   const handleMemberSubmit = async (e) => {
     e.preventDefault();
-    const result = await addMember(memberForm);
+    
+    // Buscar coordenadas pelo CEP antes de salvar
+    const coords = await getCoordinates(memberForm.area, memberForm.cep);
+    
+    const result = await addMember({
+      ...memberForm,
+      latitude: coords ? coords.lat : null,
+      longitude: coords ? coords.lon : null
+    });
+
     if (result.success) {
-      // Automação: Adicionar também à lista de eleitores
-      // Usando 'support_level' para bater exatamente com a coluna do banco
+      // Automação: Adicionar também à lista de eleitores com as coordenadas
       await addVoter({
         name: memberForm.name,
         phone: memberForm.phone,
         neighborhood: memberForm.area || 'Equipe',
-        support_level: 'strong', 
+        cep: memberForm.cep,
+        support_level: 'strong',
+        latitude: coords ? coords.lat : null,
+        longitude: coords ? coords.lon : null,
         tags: ['Membro da Equipe', memberForm.role === 'coordinator' ? 'Coordenador' : 'Voluntário']
       });
 
       setIsMemberModalOpen(false);
-      setMemberForm({ name: '', phone: '', area: '', role: 'volunteer', voters_count: 0 });
-      alert(`Sucesso! ${memberForm.name} agora faz parte da sua equipe e da sua base de votos fortes.`);
+      setMemberForm({ name: '', phone: '', area: '', cep: '', role: 'volunteer', voters_count: 0 });
+      alert(`Sucesso! ${memberForm.name} agora faz parte da sua equipe e do seu mapa de calor.`);
     } else {
       alert('Erro ao adicionar membro: ' + result.error);
     }
@@ -148,6 +173,11 @@ export function TeamView() {
                     <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
                       Região: <strong style={{ color: 'var(--color-text-primary)' }}>{member.area}</strong> • Contato: {member.phone}
                     </p>
+                    {member.cep && (
+                      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                        CEP: {member.cep}
+                      </p>
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Badge variant={member.role === 'coordinator' ? 'primary' : 'neutral'}>
@@ -208,7 +238,10 @@ export function TeamView() {
       <Modal isOpen={isMemberModalOpen} onClose={() => setIsMemberModalOpen(false)} title="Novo Membro da Equipe">
         <form onSubmit={handleMemberSubmit} className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <Input label="Nome" required value={memberForm.name} onChange={e => setMemberForm({...memberForm, name: e.target.value})} />
-          <Input label="WhatsApp" required value={memberForm.phone} onChange={e => setMemberForm({...memberForm, phone: e.target.value})} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <Input label="WhatsApp" required value={memberForm.phone} onChange={e => setMemberForm({...memberForm, phone: e.target.value})} />
+            <Input label="CEP (Opcional)" placeholder="Ex: 28000-000" value={memberForm.cep} onChange={e => setMemberForm({...memberForm, cep: e.target.value})} />
+          </div>
           <Input label="Região de Atuação" required value={memberForm.area} onChange={e => setMemberForm({...memberForm, area: e.target.value})} />
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

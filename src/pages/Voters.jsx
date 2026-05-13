@@ -23,6 +23,7 @@ export function Voters() {
     name: '',
     phone: '',
     neighborhood: '',
+    cep: '',
     birth_date: '',
     supportLevel: 'neutral',
     tags: [],
@@ -45,7 +46,8 @@ export function Voters() {
   const birthdayBoys = voters.filter(v => v.birth_date && v.birth_date.includes(todayStr));
 
   const getSupportBadge = (level) => {
-    switch(level) {
+    const l = level === 'strong' ? 'strong' : level === 'supporter' ? 'supporter' : level === 'neutral' ? 'neutral' : 'cold';
+    switch(l) {
       case 'strong': return <Badge variant="strong">Apoiador Forte</Badge>;
       case 'supporter': return <Badge variant="supporter">Apoiador</Badge>;
       case 'neutral': return <Badge variant="neutral">Neutro</Badge>;
@@ -59,7 +61,8 @@ export function Voters() {
   };
 
   const getAvatarColor = (level) => {
-    switch(level) {
+    const l = level === 'strong' ? 'strong' : level === 'supporter' ? 'supporter' : level === 'neutral' ? 'neutral' : 'cold';
+    switch(l) {
       case 'strong': return 'linear-gradient(135deg, #10B981, #059669)';
       case 'supporter': return 'linear-gradient(135deg, #3B82F6, #2563EB)';
       case 'neutral': return 'linear-gradient(135deg, #9CA3AF, #6B7280)';
@@ -73,9 +76,10 @@ export function Voters() {
     return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   };
 
-  const getCoordinates = async (neighborhood) => {
+  const getCoordinates = async (neighborhood, cep) => {
     try {
-      const query = `${neighborhood}, ${config.city || ''}, ${config.state || ''}, Brasil`;
+      // Prioridade total para o CEP se disponível
+      const query = cep && cep.length >= 8 ? cep : `${neighborhood}, ${config.city || ''}, ${config.state || ''}, Brasil`;
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
       const data = await response.json();
       if (data && data.length > 0) {
@@ -111,7 +115,7 @@ export function Voters() {
     e.preventDefault();
     setLoading(true);
 
-    const coords = await getCoordinates(formData.neighborhood);
+    const coords = await getCoordinates(formData.neighborhood, formData.cep);
 
     // Mescla a tag de liderança se marcado
     const finalTags = [...formData.tags];
@@ -123,6 +127,7 @@ export function Voters() {
       name: formData.name,
       phone: formData.phone,
       neighborhood: formData.neighborhood,
+      cep: formData.cep,
       birth_date: formData.birth_date || null,
       supportLevel: formData.supportLevel,
       latitude: coords ? coords.lat : null,
@@ -385,7 +390,7 @@ export function Voters() {
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
             />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
               <Input 
                 label="WhatsApp" 
                 type="number"
@@ -394,7 +399,13 @@ export function Voters() {
                 onChange={e => setFormData({...formData, phone: e.target.value})}
               />
               <Input 
-                label="Data de Nascimento" 
+                label="CEP (Opcional)" 
+                placeholder="Ex: 28000-000"
+                value={formData.cep}
+                onChange={e => setFormData({...formData, cep: e.target.value})}
+              />
+              <Input 
+                label="Nascimento" 
                 type="date"
                 value={formData.birth_date}
                 onChange={e => setFormData({...formData, birth_date: e.target.value})}

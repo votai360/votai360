@@ -359,7 +359,7 @@ export function Voters() {
       </div>
 
       {/* Modal Unificado (Cadastro ou Sucesso) */}
-      <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setJustRegistered(null); }} title={justRegistered ? "Cadastrado com Sucesso!" : "Novo Eleitor"}>
+      <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setJustRegistered(null); }} title={justRegistered ? "Cadastrado com Sucesso!" : "Novo Cadastro de Eleitor"}>
         
         {justRegistered ? (
           <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', textAlign: 'center', padding: '1rem 0' }}>

@@ -27,10 +27,12 @@ export function TeamView() {
 
   const getCoordinates = async (neighborhood, cep) => {
     try {
+      const city = config.city || '';
+      const state = config.state || '';
       const query = cep && cep.length >= 8 
-        ? `${cep}, ${config.city || ''}, ${config.state || ''}, Brasil` 
-        : `${neighborhood}, ${config.city || ''}, ${config.state || ''}, Brasil`;
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+        ? `${city}, ${state}, CEP ${cep}, Brasil` 
+        : `${neighborhood}, ${city}, ${state}, Brasil`;
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
       const data = await response.json();
       if (data && data.length > 0) {
         return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };

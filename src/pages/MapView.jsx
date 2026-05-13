@@ -137,10 +137,11 @@ export function MapView() {
         
         {/* PAINEL DE DIAGNÓSTICO TEMPORÁRIO */}
         <div style={{ backgroundColor: '#FEF3C7', border: '1px solid #F59E0B', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem', color: '#92400E' }}>
-          <strong>Diagnóstico do Sistema (v1.1.2):</strong><br/>
+          <strong>Diagnóstico do Sistema (v1.1.4):</strong><br/>
           • Cidade Base: {config.city || 'Macaé'} | Estado: {config.state || 'RJ'}<br/>
           • Base de Dados: {voters.length} Eleitores | {team.length} Membros de Equipe<br/>
           • GPS Ativo: {allPoints.filter(p => p.latitude && p.longitude).length} pontos com coordenadas<br/>
+          • Sessão: {voters.length > 0 || team.length > 0 ? 'Dados Recebidos' : 'Nenhum dado recebido do banco'}<br/>
           • Último Endereço: <span id="debug-last-address" style={{ fontWeight: 'bold' }}>Aguardando...</span>
         </div>
         

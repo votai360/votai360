@@ -3,26 +3,30 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useVoters } from '../store/VoterContext';
+import { useTeam } from '../store/TeamContext';
 import { useConfig } from '../store/ConfigContext';
 import { Badge } from '../components/ui/Badge';
-import { Search, MapPin, Filter } from 'lucide-react';
+import { Search, MapPin, Filter, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 // Ícones Customizados
-const createCustomIcon = (color) => {
+const createCustomIcon = (color, isTeam = false) => {
   return new L.DivIcon({
     className: 'custom-leaflet-marker hover-scale',
     html: `<div style="
       background: ${color};
-      width: 24px;
-      height: 24px;
+      width: ${isTeam ? '28px' : '24px'};
+      height: ${isTeam ? '28px' : '24px'};
       border-radius: 50%;
       border: 3px solid #fff;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.2s;
-    "></div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
+    ">${isTeam ? '⭐' : ''}</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 };
 
@@ -31,6 +35,7 @@ const icons = {
   supporter: createCustomIcon('linear-gradient(135deg, #3B82F6, #2563EB)'), // Apoiador - Azul
   neutral: createCustomIcon('linear-gradient(135deg, #9CA3AF, #6B7280)'), // Neutro - Cinza
   cold: createCustomIcon('linear-gradient(135deg, #EF4444, #DC2626)'), // Frio - Vermelho
+  team: createCustomIcon('linear-gradient(135deg, #F59E0B, #D97706)', true), // Equipe - Ouro
 };
 
 const defaultCenter = [-23.550520, -46.633308]; // São Paulo como default
@@ -46,15 +51,23 @@ function MapUpdater({ center }) {
 
 export function MapView() {
   const { voters } = useVoters();
+  const { team } = useTeam();
   const { config } = useConfig();
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [filterLevel, setFilterLevel] = useState('all');
 
-  const filteredVoters = voters.filter(voter => {
-    const level = voter.supportLevel || voter.support_level;
+  // Mescla eleitores e equipe em uma única lista para o mapa
+  const allPoints = [
+    ...voters.map(v => ({ ...v, isTeam: false })),
+    ...team.map(m => ({ ...m, isTeam: true, supportLevel: 'team' }))
+  ];
+
+  const filteredPoints = allPoints.filter(point => {
     if (filterLevel === 'all') return true;
+    if (filterLevel === 'team' && point.isTeam) return true;
+    const level = point.supportLevel || point.support_level;
     return level === filterLevel;
   });
 
@@ -159,7 +172,8 @@ export function MapView() {
               boxShadow: 'var(--shadow-sm)',
             }}
           >
-            <option value="all">Todos os perfis de apoio</option>
+            <option value="all">Todos os perfis e equipe</option>
+            <option value="team">⭐ Membros da Equipe (Ouro)</option>
             <option value="strong">Somente Forte Apoiador (Verde)</option>
             <option value="supporter">Somente Apoiador (Azul)</option>
             <option value="neutral">Somente Neutro (Cinza)</option>
@@ -178,26 +192,29 @@ export function MapView() {
           <MapUpdater center={mapCenter} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" // Mudado para light_all para visual mais limpo/moderno
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           />
           
-          {filteredVoters.map(voter => {
-            const level = voter.supportLevel || voter.support_level;
-            return voter.latitude && voter.longitude ? (
+          {filteredPoints.map(point => {
+            const level = point.supportLevel || point.support_level;
+            return point.latitude && point.longitude ? (
               <Marker 
-                key={voter.id} 
-                position={[voter.latitude, voter.longitude]}
+                key={`${point.isTeam ? 'team' : 'voter'}-${point.id}`} 
+                position={[point.latitude, point.longitude]}
                 icon={icons[level] || icons.neutral}
               >
                 <Popup className="premium-popup">
                   <div style={{ minWidth: '160px', padding: '0.5rem 0' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', color: '#1E293B', fontWeight: '700' }}>{voter.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      {point.isTeam && <ShieldCheck size={18} color="#D97706" />}
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1E293B', fontWeight: '700' }}>{point.name}</h3>
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', marginBottom: '12px' }}>
                       <MapPin size={12} />
-                      <span style={{ fontSize: '0.85rem' }}>{voter.neighborhood}</span>
+                      <span style={{ fontSize: '0.85rem' }}>{point.neighborhood || point.area || point.cep}</span>
                     </div>
-                    <Badge variant={voter.supportLevel} style={{ width: '100%', justifyContent: 'center' }}>
-                      {voter.supportLevel}
+                    <Badge variant={point.isTeam ? 'primary' : level} style={{ width: '100%', justifyContent: 'center' }}>
+                      {point.isTeam ? 'Equipe' : level}
                     </Badge>
                   </div>
                 </Popup>
@@ -222,6 +239,10 @@ export function MapView() {
           fontWeight: '500',
           color: 'var(--color-text-primary)'
         }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'linear-gradient(135deg, #F59E0B, #D97706)', boxShadow: '0 2px 4px rgba(245,158,11,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', color: 'white' }}>⭐</div>
+            <span>Equipe</span>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #059669)', boxShadow: '0 2px 4px rgba(16,185,129,0.4)' }}></div>
             <span>Forte</span>

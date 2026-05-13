@@ -79,7 +79,7 @@ export function Voters() {
   const getCoordinates = async (neighborhood, cep) => {
     try {
       // Prioridade total para o CEP se disponível
-      const query = cep && cep.length >= 8 ? cep : `${neighborhood}, ${config.city || ''}, ${config.state || ''}, Brasil`;
+      const query = cep && cep.length >= 8 ? `${cep}, Brasil` : `${neighborhood}, ${config.city || ''}, ${config.state || ''}, Brasil`;
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
       const data = await response.json();
       if (data && data.length > 0) {

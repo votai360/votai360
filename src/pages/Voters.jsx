@@ -107,6 +107,13 @@ export function Voters() {
         }
       });
       const data = await response.json();
+      
+      const logEl = document.getElementById('debug-map-log');
+      if (logEl) {
+        if (data && data.length > 0) logEl.innerText = "Achou! ✅";
+        else logEl.innerText = "Vazio! ❌ (Mapa não conhece esse endereço)";
+      }
+
       if (data && data.length > 0) {
         return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
       }

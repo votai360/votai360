@@ -96,7 +96,7 @@ export function ConfigProvider({ children }) {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         fetchConfig();
       } else if (event === 'SIGNED_OUT') {

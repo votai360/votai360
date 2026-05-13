@@ -22,37 +22,7 @@ export function VoterProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Busca dados iniciais
-  useEffect(() => {
-    fetchVoters();
-  }, []);
-
-  // Calcula estatísticas sempre que voters atualizar
-  useEffect(() => {
-    if (voters.length > 0) {
-      const today = new Date().toISOString().split('T')[0];
-      const newTodayCount = voters.filter(v => v.created_at && v.created_at.startsWith(today)).length;
-      
-      // Suporte para ambos os formatos (Banco de Dados e Código)
-      const isStrong = (v) => v.supportLevel === 'strong' || v.support_level === 'strong';
-      const isSupporter = (v) => v.supportLevel === 'supporter' || v.support_level === 'supporter' || isStrong(v);
-
-      const strongCount = voters.filter(isStrong).length;
-      const supporterCount = voters.filter(isSupporter).length;
-      
-      const leaderCount = voters.filter(v => v.tags?.includes('liderança') || v.tags?.includes('Equipe')).length;
-      const conversion = Math.round((supporterCount / voters.length) * 100) || 0;
-
-      setStats({
-        totalVoters: voters.length,
-        newToday: newTodayCount,
-        conversionRate: `${conversion}%`,
-        strongSupporters: strongCount,
-        totalLeaders: leaderCount,
-      });
-    }
-  }, [voters]);
-
+  // Função de busca (declarada antes do uso)
   const fetchVoters = async () => {
     setLoading(true);
     try {
@@ -78,8 +48,38 @@ export function VoterProvider({ children }) {
     }
   };
 
+  // Busca dados iniciais
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    fetchVoters();
+  }, []);
+
+  // Calcula estatísticas sempre que voters atualizar
+  useEffect(() => {
+    if (voters.length > 0) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const newTodayCount = voters.filter(v => v.created_at && v.created_at.startsWith(todayStr)).length;
+      
+      const isStrong = (v) => v.supportLevel === 'strong' || v.support_level === 'strong';
+      const isSupporter = (v) => v.supportLevel === 'supporter' || v.support_level === 'supporter' || isStrong(v);
+
+      const strongCount = voters.filter(isStrong).length;
+      const supporterCount = voters.filter(isSupporter).length;
+      
+      const leaderCount = voters.filter(v => v.tags?.includes('liderança') || v.tags?.includes('Equipe')).length;
+      const conversion = Math.round((supporterCount / voters.length) * 100) || 0;
+
+      setStats({
+        totalVoters: voters.length,
+        newToday: newTodayCount,
+        conversionRate: `${conversion}%`,
+        strongSupporters: strongCount,
+        totalLeaders: leaderCount,
+      });
+    }
+  }, [voters]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         fetchVoters();
       } else if (event === 'SIGNED_OUT') {

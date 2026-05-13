@@ -29,9 +29,21 @@ export function TeamView() {
     try {
       const city = config.city || '';
       const state = config.state || '';
-      const query = cep && cep.length >= 8 
-        ? `${city}, ${state}, CEP ${cep}, Brasil` 
-        : `${neighborhood}, ${city}, ${state}, Brasil`;
+      let query = `${neighborhood}, ${city}, ${state}, Brasil`;
+
+      // 1. Tenta ViaCEP para precisão total
+      if (cep && cep.replace(/\D/g, '').length === 8) {
+        try {
+          const viaCepRes = await fetch(`https://viacep.com.br/ws/${cep.replace(/\D/g, '')}/json/`);
+          const viaCepData = await viaCepRes.json();
+          if (!viaCepData.erro) {
+            query = `${viaCepData.logradouro}, ${viaCepData.bairro}, ${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
+          }
+        } catch (err) {
+          console.warn("ViaCEP offline");
+        }
+      }
+
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
       const data = await response.json();
       if (data && data.length > 0) {

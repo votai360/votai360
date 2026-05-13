@@ -80,9 +80,23 @@ export function Voters() {
     try {
       const city = config.city || '';
       const state = config.state || '';
-      const query = cep && cep.length >= 8 
-        ? `${city}, ${state}, CEP ${cep}, Brasil` 
-        : `${neighborhood}, ${city}, ${state}, Brasil`;
+      let query = `${neighborhood}, ${city}, ${state}, Brasil`;
+
+      // 1. Se tem CEP, tenta descobrir a rua exata via ViaCEP
+      if (cep && cep.replace(/\D/g, '').length === 8) {
+        try {
+          const viaCepRes = await fetch(`https://viacep.com.br/ws/${cep.replace(/\D/g, '')}/json/`);
+          const viaCepData = await viaCepRes.json();
+          if (!viaCepData.erro) {
+            // Se achou a rua, monta a busca ultra-específica
+            query = `${viaCepData.logradouro}, ${viaCepData.bairro}, ${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
+          }
+        } catch (err) {
+          console.warn("ViaCEP falhou, usando busca padrão");
+        }
+      }
+
+      // 2. Busca coordenadas no mapa com o melhor endereço disponível
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
       const data = await response.json();
       if (data && data.length > 0) {

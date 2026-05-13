@@ -101,7 +101,11 @@ export function Voters() {
       if (debugEl) debugEl.innerText = query;
 
       // 2. Busca coordenadas no mapa com o melhor endereço disponível
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`, {
+        headers: {
+          'User-Agent': 'VotAi-App/1.1'
+        }
+      });
       const data = await response.json();
       if (data && data.length > 0) {
         return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };

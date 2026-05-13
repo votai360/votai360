@@ -49,6 +49,10 @@ export function BottomNav() {
         <Users {...iconProps} />
         <span>Eleitores</span>
       </NavLink>
+      <NavLink to="/app/map" style={getLinkStyle}>
+        <MapIcon {...iconProps} />
+        <span>Mapa</span>
+      </NavLink>
       <NavLink to="/app/strategy" style={getLinkStyle}>
         <Target {...iconProps} />
         <span>Estratégia</span>

@@ -100,7 +100,7 @@ export function LandingPage() {
 
         <div className="animate-in" style={{ position: 'relative', zIndex: 1 }}>
           <Badge variant="primary" style={{ marginBottom: '1.5rem', padding: '0.5rem 1rem' }}>
-            <Zap size={14} style={{ marginRight: '0.5rem' }} /> Tecnologia para 2028
+            <Zap size={14} style={{ marginRight: '0.5rem' }} /> Inteligência para 2026 e 2028
           </Badge>
           <h1 style={{ 
             fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', fontWeight: '900', 
@@ -116,7 +116,7 @@ export function LandingPage() {
             fontSize: '1.2rem', color: 'rgba(255,255,255,0.6)', 
             maxWidth: '800px', margin: '0 auto 2.5rem', lineHeight: 1.6
           }}>
-            Abandone as planilhas. Gerencie eleitores, coordene sua equipe e visualize seu crescimento com a plataforma política mais completa do Brasil.
+            Abandone as planilhas. Gerencie eleitores, coordene sua equipe e visualize seu crescimento na plataforma política mais completa do Brasil, pronta para qualquer desafio eleitoral.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a href={whatsappUrl('Geral')} style={{ 
@@ -126,7 +126,7 @@ export function LandingPage() {
               display: 'flex', alignItems: 'center', gap: '0.75rem',
               boxShadow: '0 10px 30px rgba(22,163,74,0.4)'
             }}>
-              Quero Vencer em 2028 <ArrowRight size={20} />
+              Quero Vencer as Eleições <ArrowRight size={20} />
             </a>
           </div>
         </div>

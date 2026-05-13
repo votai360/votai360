@@ -5,6 +5,7 @@ import {
   ArrowRight, Check, MessageCircle, 
   BarChart3, Calendar, Zap, Rocket 
 } from 'lucide-react';
+import { Badge } from '../components/ui/Badge';
 
 export function LandingPage() {
   const [mounted, setMounted] = useState(false);

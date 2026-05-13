@@ -40,12 +40,21 @@ const icons = {
 
 const defaultCenter = [-23.550520, -46.633308]; // São Paulo como default
 
-// Componente para forçar o mapa a atualizar o centro
-function MapUpdater({ center }) {
+// Componente para forçar o mapa a ajustar o zoom para ver todos os pontos
+function MapBoundsUpdater({ points }) {
   const map = useMap();
   useEffect(() => {
-    map.flyTo(center, map.getZoom(), { duration: 1.5 });
-  }, [center, map]);
+    if (points && points.length > 0) {
+      const validPoints = points.filter(p => p.latitude && p.longitude);
+      if (validPoints.length > 0) {
+        const bounds = L.latLngBounds(validPoints.map(p => [
+          parseFloat(p.latitude), 
+          parseFloat(p.longitude)
+        ]));
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+      }
+    }
+  }, [points, map]);
   return null;
 }
 
@@ -189,7 +198,7 @@ export function MapView() {
           style={{ height: '100%', width: '100%', zIndex: 1 }}
           zoomControl={false}
         >
-          <MapUpdater center={mapCenter} />
+          <MapBoundsUpdater points={filteredPoints} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -197,10 +206,13 @@ export function MapView() {
           
           {filteredPoints.map(point => {
             const level = point.supportLevel || point.support_level;
-            return point.latitude && point.longitude ? (
+            const lat = parseFloat(point.latitude);
+            const lon = parseFloat(point.longitude);
+
+            return (lat && lon) ? (
               <Marker 
                 key={`${point.isTeam ? 'team' : 'voter'}-${point.id}`} 
-                position={[point.latitude, point.longitude]}
+                position={[lat, lon]}
                 icon={icons[level] || icons.neutral}
               >
                 <Popup className="premium-popup">

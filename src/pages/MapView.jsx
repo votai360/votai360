@@ -135,6 +135,11 @@ export function MapView() {
         <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', color: 'var(--color-text-primary)' }}>Mapa Eleitoral</h2>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Visualização geográfica da base e heatmap de força.</p>
         
+        {/* PAINEL DE DIAGNÓSTICO TEMPORÁRIO */}
+        <div style={{ backgroundColor: '#FEF3C7', border: '1px solid #F59E0B', padding: '0.5rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem', color: '#92400E' }}>
+          <strong>Diagnóstico:</strong> Total de Pontos: {allPoints.length} | Com Coordenadas: {allPoints.filter(p => p.latitude && p.longitude).length}
+        </div>
+        
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.75rem' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <MapPin size={18} color="var(--color-text-secondary)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
